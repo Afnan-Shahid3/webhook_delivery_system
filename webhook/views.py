@@ -2,6 +2,7 @@ from django.shortcuts import render
 import requests
 
 from .models import Event, Delivery, DeliveryAttempt, Endpoint
+from .tasks import send_animal_name
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
@@ -45,36 +46,8 @@ def animal_web(request):
                 delivery = Delivery.objects.create(event = event, endpoint = i, delivery_status= 'process')
                 
                 ##sending requests
-                try:
-                    response = requests.post(i.url, json = event.data, timeout = 5)
-                    DA = DeliveryAttempt.objects.create(delivery = delivery, response_status_code = response.status_code, attempt_number = 1, response_body = response.text)
-                    if 200 <= response.status_code < 300:
-                        print("You have selected an animal")
-                        DA.attempt_status = "SU"
-                        DA.save()
-                        delivery.delivery_status = "deliver"
-                        delivery.save()
-                    elif 400 <= response.status_code < 500:
-                        DA.attempt_status = "CE"
-                        DA.save()
-                        delivery.delivery_status = "fail"
-                        delivery.save()
-                    else:
-                        DA.attempt_status = "SE"
-                        DA.save()
-                        delivery.delivery_status = "fail"
-                        delivery.save()
-                except requests.exceptions.Timeout:
-                    DA = DeliveryAttempt.objects.create(delivery = delivery, response_status_code = None, attempt_number = 1, attempt_status= "TO"
-                    , response_body = response.text)
-                    delivery.delivery_status = "fail"
-                    delivery.save()
-
-                except requests.exceptions.ConnectionError:
-                    DA = DeliveryAttempt.objects.create(delivery = delivery, response_status_code = None, attempt_number = 1, attempt_status= "COE"
-                    , response_body = response.text)
-                    delivery.delivery_status = "fail"
-                    delivery.save()   
+                send_animal_name.delay(delivery.id)
+                 
             return redirect('Event')
     else:
         form = addEvent()
