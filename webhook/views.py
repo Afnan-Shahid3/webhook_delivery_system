@@ -1,7 +1,7 @@
 from django.shortcuts import render
 import requests
 
-from .models import Event, Delivery, DeliveryAttempt, Endpoint
+from .models import Event, Delivery, DeliveryAttempt, Endpoint, ProcessedIdempotentKeys
 from .tasks import send_animal_name
 
 from rest_framework.response import Response
@@ -14,22 +14,30 @@ from django.shortcuts import redirect
 @api_view(['POST'])
 def animal(request):
     animals = ['cat', 'dog', 'elephant', 'lion', 'tiger', 'monkey', 'giraffe']
-    try:
-        data = request.data
-        name = data.get('name')
+    new_key = request.headers.get("Idempotency-key")
+    
+    if not ProcessedIdempotentKeys.objects.filter(key = new_key).exists():
+        try:
+            data = request.data
+            name = data.get('name')
 
-        if name in animals:
-            return Response({'status' : 200, 'message' : "OK"}, status=status.HTTP_200_OK)
 
-        return Response({'status' : 404, 'message' : "Wrong"}, status = status.HTTP_404_NOT_FOUND)
 
-    except Exception as e:
-        print(e)
-    return Response({
-        'status' : 400,
-        'message' : 'Something went wrong'
-    }, status = status.HTTP_400_BAD_REQUEST)
+            if name in animals:
+                ProcessedIdempotentKeys.objects.create(key = new_key)
+                return Response({'status' : 200, 'message' : "OK"}, status=status.HTTP_200_OK)
 
+            return Response({'status' : 404, 'message' : "Wrong"}, status = status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            print(e)
+        return Response({
+            'status' : 400,
+            'message' : 'Something went wrong'
+        }, status = status.HTTP_400_BAD_REQUEST)
+
+    else:
+        return Response({"status" : 200, "message": "Already Processed"}, status = status.HTTP_200_OK)
 
 def animal_web(request):
     if request.method == "POST":

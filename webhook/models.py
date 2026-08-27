@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import uuid
 # Create your models here.
 
 TYPE_CHOICES = [
@@ -32,6 +33,7 @@ class Delivery(models.Model):
     endpoint = models.ForeignKey(Endpoint, on_delete=models.CASCADE, null = False, blank = False)
     delivery_status = models.CharField(max_length= 10, choices=DELIVERY_CHOICES )
     created_at = models.DateTimeField(auto_now_add=True)
+    key = models.UUIDField(default = uuid.uuid4, editable = False, unique= True, null= True)
 
 CHOICES_LIST = [
     ('SU', "Success"),
@@ -48,4 +50,12 @@ class DeliveryAttempt(models.Model):
     response_body = models.JSONField(null = True, blank = True)
     response_status_code = models.IntegerField(null = True, blank = True)
     attempt_status = models.CharField(max_length = 5, choices = CHOICES_LIST)
+
+
+
+# Client Side Models
+
+class ProcessedIdempotentKeys(models.Model):
+    key = models.UUIDField(unique = True)
+    processed_at = models.DateTimeField(auto_now_add= True)
 
