@@ -9,10 +9,19 @@ from rest_framework.decorators import api_view, action
 from rest_framework import status
 from .forms import addEvent
 from django.shortcuts import redirect
+from django.conf import settings
+import json, hmac, hashlib
 # Create your views here.
 
 @api_view(['POST'])
 def animal(request):
+    body = request.body
+    signature = request.headers.get('X-Webhook-Signature')
+    expected_signature = hmac.new(settings.WEBHOOK_SECRET.encode(), request.body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected_signature, signature):
+        return Response({'status':401, 'message' : 'Invalid signature'}, status = status.HTTP_401_UNAUTHORIZED)
+
+
     animals = ['cat', 'dog', 'elephant', 'lion', 'tiger', 'monkey', 'giraffe']
     new_key = request.headers.get("Idempotency-key")
     
@@ -30,7 +39,7 @@ def animal(request):
             return Response({'status' : 404, 'message' : "Wrong"}, status = status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            print(e)
+            print("Idempotency Key not available")
         return Response({
             'status' : 400,
             'message' : 'Something went wrong'

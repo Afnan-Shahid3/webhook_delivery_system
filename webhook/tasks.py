@@ -6,6 +6,7 @@ from .models import Event, Delivery, DeliveryAttempt, Endpoint
 
 from celery.exceptions import MaxRetriesExceededError
 
+import json, hmac, hashlib
 class ServerErrorRetry(Exception):
     pass
 
@@ -15,7 +16,18 @@ def send_animal_name(self, delivery_id):
     delay = 5 * (2 ** self.request.retries)
     delivery = Delivery.objects.get(id = delivery_id)
     try:
-        response = requests.post(delivery.endpoint.url,headers= {"Idempotency-key" : str(delivery.key)} ,json = delivery.event.data, timeout = 5)
+        payload = json.dumps(delivery.event.data)
+        signature = hmac.new(delivery.endpoint.secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        response = requests.post(
+            delivery.endpoint.url,
+            data = payload,
+            headers = {
+                "Idempotency-Key" : str(delivery.key),
+                "X-Webhook-Signature" : signature,
+                "Content-Type" : "application/json",
+            },
+            timeout = 5
+        )
         DA = DeliveryAttempt.objects.create(delivery = delivery, response_status_code = response.status_code, attempt_number = self.request.retries, response_body = response.text)
         if 200 <= response.status_code < 300:
             print("You have selected an animal")

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 import uuid
+import secrets
 # Create your models here.
 
 TYPE_CHOICES = [
@@ -21,7 +22,7 @@ class Endpoint(models.Model):
     client = models.CharField(max_length= 25)
     url = models.URLField(unique= True)
     is_active = models.BooleanField(default = True)
-
+    secret = models.CharField(default = secrets.token_hex(32))
 DELIVERY_CHOICES = [
     ('process', "IN PROCESS"),
     ('deliver', "DELIVERED"),
