@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Endpoint</th>
+            <th>Event</th>
+            <th>Status</th>
+            <th>Created_at</th>
+        </tr>
+        {% for delivery in deliveries%}
+            <tr>
+                <td><a href = "{% url 'endpoint' delivery.endpoint.id %}"> {{delivery.endpoint }}</a></td>
+                <td> {{ delivery.event }}</td>
+                <td><a href = "{% url 'detail' delivery.id %}">{{ delivery.delivery_status }}</a></td>
+                <td>{{ delivery.created_at }}</td>
+            </tr>
+        {% endfor %}
+
+    </table>
+</body>
+</html>

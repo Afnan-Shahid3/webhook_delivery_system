@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h2>Delivery</h2>
+    <ul>
+        <li>{{delivery.event.name}}</li>
+        <li>{{delivery.event.created_at}}</li>
+        <li>{{delivery.endpoint.client}}</li>
+        <li>{{delivery.endpoint.url}}</li>
+        <li>{{delivery.delivery_status}}</li>
+        <li>{{delivery.created_at}}</li>
+        
+    </ul>
+
+    <h2>Attempts</h2>
+    <ul>
+        {% for attempt in attempts %}
+        <li>Attempt Number: {{attempt.attempt_number}}</li>
+        <li>Attempted at: {{attempt.attempted_at}}</li>
+        <li>Status: {{attempt.get_attempt_status_display}}</li>
+        <li>Response: {{attempt.response_status_code}}</li>
+        <p> </p>
+        {% endfor%}
+    </ul>
+</body>
+</html>

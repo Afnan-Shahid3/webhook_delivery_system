@@ -74,3 +74,39 @@ def animal_web(request):
     }
 
     return render(request, 'add_event.html', context)
+
+
+def dashboard(request):
+    deliveries = Delivery.objects.all().order_by('-created_at')
+
+    context = {
+        'deliveries' : deliveries
+    }
+
+    return render(request, 'Dashboard.html', context)
+
+
+def delivery_detail(request, delivery_id):
+    delivery = Delivery.objects.get(id = delivery_id)
+    attempts = delivery.attempts.all().order_by('attempt_number')
+
+    context = {
+        'delivery' : delivery,
+        'attempts' : attempts
+    }
+
+    return render(request, 'detail.html', context)
+
+
+def endpoint_details(request, endpoint_id):
+    endpoint = Endpoint.objects.get(id = endpoint_id)
+    delivery = Delivery.objects.filter(endpoint = endpoint)
+
+    context = {
+        'endpoint' : endpoint,
+        'delivery' : delivery,
+    }
+
+    return render(request, 'endpoint_detail.html', context)
+
+

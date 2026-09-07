@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+        <h2>Endpoint</h2>
+    <ul>
+        <li>{{endpoint.client}}</li>
+        <li>{{endpoint.url}}</li>
+        <li>{{endpoint.is_active}}</li>     
+    </ul>
+
+    <h2>Deliveries</h2>
+    <ul>
+        {% for d in delivery %}
+        <li>{{d.event.name}}</li>
+        <li>{{d.event.created_at}}</li>
+        <li>{{d.delivery_status}}</li>
+        <li>{{d.created_at}}</li>
+        <p> </p>
+        {% endfor%}
+    </ul>
+    
+</body>
+</html>

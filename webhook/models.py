@@ -17,12 +17,20 @@ class Event(models.Model):
     data = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Endpoint(models.Model):
     client = models.CharField(max_length= 25)
     url = models.URLField(unique= True)
     is_active = models.BooleanField(default = True)
     secret = models.CharField(default = secrets.token_hex(32))
+    
+    def __str__(self):
+        return self.client
+
+
 DELIVERY_CHOICES = [
     ('process', "IN PROCESS"),
     ('deliver', "DELIVERED"),
@@ -35,6 +43,8 @@ class Delivery(models.Model):
     delivery_status = models.CharField(max_length= 10, choices=DELIVERY_CHOICES )
     created_at = models.DateTimeField(auto_now_add=True)
     key = models.UUIDField(default = uuid.uuid4, editable = False, unique= True, null= True)
+
+     
 
 CHOICES_LIST = [
     ('SU', "Success"),
