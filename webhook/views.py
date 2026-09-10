@@ -11,6 +11,8 @@ from .forms import addEvent
 from django.shortcuts import redirect
 from django.conf import settings
 import json, hmac, hashlib
+
+from django.utils import timezone
 # Create your views here.
 
 @api_view(['POST'])
@@ -59,9 +61,13 @@ def animal_web(request):
 
             ##creating deliveries
             endpoints = Endpoint.objects.filter(is_active= True)
+
             for i in endpoints:
+                #timeout check
+                if i.circuit_broken_until and i.circuit_broken_until > timezone.now():
+                    continue
                 delivery = Delivery.objects.create(event = event, endpoint = i, delivery_status= 'process')
-                
+
                 ##sending requests
                 send_animal_name.delay(delivery.id)
                  

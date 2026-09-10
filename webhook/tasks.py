@@ -7,6 +7,9 @@ from .models import Event, Delivery, DeliveryAttempt, Endpoint
 from celery.exceptions import MaxRetriesExceededError
 
 import json, hmac, hashlib
+
+from django.utils import timezone
+from datetime import timedelta
 class ServerErrorRetry(Exception):
     pass
 
@@ -35,6 +38,8 @@ def send_animal_name(self, delivery_id):
             DA.save()
             delivery.delivery_status = "deliver"
             delivery.save()
+            delivery.endpoint.consecutive_failures = 0
+            delivery.endpoint.save()
         elif 400 <= response.status_code < 500:
             DA.attempt_status = "CE"
             DA.save()
@@ -48,6 +53,11 @@ def send_animal_name(self, delivery_id):
             except (MaxRetriesExceededError, ServerErrorRetry):
                 delivery.delivery_status = "fail"
                 delivery.save()
+                delivery.endpoint.consecutive_failures += 1
+                if delivery.endpoint.consecutive_failures >= 5:
+                    delivery.endpoint.circuit_broken_until = timezone.now() + timedelta(minutes = 10)
+
+                delivery.endpoint.save()
     except requests.exceptions.Timeout as time:
         DA = DeliveryAttempt.objects.create(delivery = delivery, response_status_code = None, attempt_number = self.request.retries, attempt_status= "TO")
         try:
@@ -55,11 +65,18 @@ def send_animal_name(self, delivery_id):
         except (MaxRetriesExceededError, requests.exceptions.Timeout):
             delivery.delivery_status = "fail"
             delivery.save()
-        
+            delivery.endpoint.consecutive_failures += 1
+            if delivery.endpoint.consecutive_failures >= 5:
+                delivery.endpoint.circuit_broken_until = timezone.now() + timedelta(minutes = 10)
+            delivery.endpoint.save()
     except requests.exceptions.ConnectionError as Connection:
         DA = DeliveryAttempt.objects.create(delivery = delivery, response_status_code = None, attempt_number = self.request.retries, attempt_status= "COE")
         try:
             raise self.retry(exc = Connection, countdown = delay, max_retries = 3)
         except (MaxRetriesExceededError, requests.exceptions.ConnectionError):
             delivery.delivery_status = "fail"
-            delivery.save()   
+            delivery.save()
+            delivery.endpoint.consecutive_failures += 1
+            if delivery.endpoint.consecutive_failures >= 5:
+                delivery.endpoint.circuit_broken_until = timezone.now() + timedelta(minutes = 10)
+            delivery.endpoint.save()
