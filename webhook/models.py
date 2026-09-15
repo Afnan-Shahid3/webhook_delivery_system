@@ -26,7 +26,7 @@ class Endpoint(models.Model):
     url = models.URLField(unique= True)
     is_active = models.BooleanField(default = True)
     secret = models.CharField(default = secrets.token_hex(32)) 
-    circuit_broken_until = models.TimeField(null = True, blank = True)
+    circuit_broken_until = models.DateTimeField(null = True, blank = True)
     consecutive_failures = models.IntegerField(default = 0)
     
     def __str__(self):

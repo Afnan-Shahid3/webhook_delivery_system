@@ -50,7 +50,7 @@ def send_animal_name(self, delivery_id):
             DA.save()
             try:
                 raise self.retry(exc=ServerErrorRetry(f"Server returned {response.status_code}"), max_retries = 3, countdown = delay)
-            except (MaxRetriesExceededError, ServerErrorRetry):
+            except MaxRetriesExceededError:
                 delivery.delivery_status = "fail"
                 delivery.save()
                 delivery.endpoint.consecutive_failures += 1

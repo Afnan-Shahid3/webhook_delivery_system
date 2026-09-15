@@ -3,6 +3,7 @@ vnev/
 venv/
 env/
 *.venv
+migrations/
 
 # Python
 __pycache__/
